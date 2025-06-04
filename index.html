@@ -1,0 +1,1014 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>No-CodeQA Pro</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            background-color: #0F172A; /* slate-900 */
+            color: #E2E8F0; /* slate-200 */
+        }
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: #1E293B; /* slate-800 */ }
+        ::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; /* slate-700 */ }
+        ::-webkit-scrollbar-thumb:hover { background: #475569; /* slate-600 */ }
+
+        .action-item.dragging { opacity: 0.6; border: 2px dashed #22D3EE; /* cyan-400 */ }
+        #canvasDropZone.drop-target-highlight { border-color: #22D3EE; background-color: rgba(34, 211, 238, 0.05); }
+        
+        .btn-primary { background-color: #0EA5E9; /* sky-500 */ } .btn-primary:hover { background-color: #0284C7; /* sky-600 */ }
+        .btn-success { background-color: #10B981; /* emerald-500 */ } .btn-success:hover { background-color: #059669; /* emerald-600 */ }
+        .btn-warning { background-color: #F59E0B; /* amber-500 */ } .btn-warning:hover { background-color: #D97706; /* amber-600 */ }
+        .btn-danger { background-color: #EF4444; /* red-500 */ } .btn-danger:hover { background-color: #DC2626; /* red-600 */ }
+        .btn-secondary { background-color: #475569; /* slate-600 */ } .btn-secondary:hover { background-color: #334155; /* slate-700 */ }
+
+        .input-field {
+            background-color: #1E293B; /* slate-800 */
+            border: 1px solid #334155; /* slate-700 */
+            color: #CBD5E1; /* slate-300 */
+        }
+        .input-field:focus {
+            border-color: #22D3EE; /* cyan-400 */
+            ring: 1px;
+            ring-color: #22D3EE;
+            box-shadow: 0 0 0 2px rgba(34, 211, 238, 0.3);
+        }
+        .modal-content {
+            animation: fadeInScale 0.3s ease-out forwards;
+            background-color: #1E293B; /* slate-800 */
+            border: 1px solid #334155; /* slate-700 */
+        }
+        @keyframes fadeInScale {
+            from { opacity: 0; transform: translateY(10px) scale(0.98); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        .canvas-step {
+            background-color: #1E293B; /* slate-800 */
+            border-left-width: 4px;
+            transition: border-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out, transform 0.1s ease-in-out;
+        }
+        .canvas-step:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.2), 0 4px 6px -2px rgba(0, 0, 0, 0.1);
+        }
+        .config-label { color: #94A3B8; /* slate-400 */ }
+        .config-heading { color: #67E8F9; /* cyan-300 */ font-weight: 500; margin-bottom: 0.75rem; border-bottom: 1px solid #334155; padding-bottom: 0.5rem; }
+    </style>
+</head>
+<body class="flex flex-col h-screen overflow-hidden">
+
+    <!-- SVG Icons Definition -->
+    <svg width="0" height="0" style="display:none;">
+        <symbol id="icon-logo" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path></symbol>
+        <symbol id="icon-plus" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" /></symbol>
+        <symbol id="icon-save" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" /></symbol>
+        <symbol id="icon-load" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" /></symbol>
+        <symbol id="icon-play" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></symbol>
+        <symbol id="icon-results" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></symbol>
+        <symbol id="icon-settings" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></symbol>
+        <symbol id="icon-close" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></symbol>
+        <symbol id="icon-trash" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></symbol>
+        <symbol id="icon-start" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 5l7 7-7 7M5 5l7 7-7 7" /></symbol>
+    </svg>
+
+    <!-- Top Navigation/Toolbar -->
+    <nav class="bg-slate-800/70 backdrop-blur-md p-3 shadow-lg flex justify-between items-center flex-shrink-0 border-b border-slate-700">
+        <div class="flex items-center space-x-3">
+            <svg class="w-7 h-7 text-cyan-400" fill="none" stroke="currentColor"><use xlink:href="#icon-logo"></use></svg>
+            <h1 class="text-xl font-semibold text-cyan-400 hidden sm:block">No-CodeQA Pro</h1>
+            <input type="text" id="testFlowName" placeholder="My Awesome Test" class="input-field px-3 py-1.5 rounded-md text-sm focus:border-cyan-400 w-48 sm:w-64 placeholder-slate-500">
+        </div>
+        <div class="flex items-center space-x-1.5">
+            <button id="newTestBtn" title="New Test" class="btn-primary text-white px-3 py-1.5 rounded-md text-sm font-medium transition-colors flex items-center">
+                <svg class="h-4 w-4 inline sm:mr-1.5" fill="none" stroke="currentColor"><use xlink:href="#icon-plus"></use></svg><span class="hidden sm:inline">New</span>
+            </button>
+            <button id="saveTestBtn" title="Save Flow" class="btn-success text-white px-3 py-1.5 rounded-md text-sm font-medium transition-colors flex items-center">
+                <svg class="h-4 w-4 inline sm:mr-1.5" fill="none" stroke="currentColor"><use xlink:href="#icon-save"></use></svg><span class="hidden sm:inline">Save</span>
+            </button>
+            <label title="Load Flow" class="btn-warning text-white px-3 py-1.5 rounded-md text-sm font-medium cursor-pointer transition-colors flex items-center">
+                <svg class="h-4 w-4 inline sm:mr-1.5" fill="none" stroke="currentColor"><use xlink:href="#icon-load"></use></svg><span class="hidden sm:inline">Load</span>
+                <input type="file" id="loadTestFile" class="hidden" accept=".json">
+            </label>
+            <button id="executeTestBtn" title="Execute Test" class="bg-cyan-500 hover:bg-cyan-600 text-white px-3 py-1.5 rounded-md text-sm font-medium transition-colors flex items-center">
+                 <svg class="h-4 w-4 inline sm:mr-1.5" fill="none" stroke="currentColor"><use xlink:href="#icon-play"></use></svg><span class="hidden sm:inline">Execute</span>
+            </button>
+            <button id="testResultsBtn" title="Test Results" class="btn-secondary text-white px-3 py-1.5 rounded-md text-sm font-medium transition-colors flex items-center">
+                <svg class="h-4 w-4 inline sm:mr-1.5" fill="none" stroke="currentColor"><use xlink:href="#icon-results"></use></svg><span class="hidden sm:inline">Results</span>
+            </button>
+            <button id="settingsBtn" title="Settings" class="btn-secondary text-white px-2.5 py-1.5 rounded-md text-sm font-medium transition-colors">
+                <svg class="h-5 w-5" fill="none" stroke="currentColor"><use xlink:href="#icon-settings"></use></svg>
+            </button>
+        </div>
+    </nav>
+
+    <!-- Main Content Area -->
+    <main class="flex-grow flex overflow-hidden">
+        <!-- Actions Palette (Left Sidebar) -->
+        <aside id="actionsPalette" class="w-60 md:w-72 bg-slate-800 p-4 overflow-y-auto shadow-lg flex-shrink-0 border-r border-slate-700">
+            {/* Actions will be dynamically inserted */}
+        </aside>
+
+        <!-- Canvas (Center Area) -->
+        <section id="canvas" class="flex-grow p-4 sm:p-6 bg-slate-950 overflow-y-auto relative">
+            <div id="canvasDropZone" class="min-h-full border-2 border-dashed border-slate-700 hover:border-cyan-500 rounded-xl p-4 flex flex-col space-y-3 transition-colors">
+                <p class="text-slate-500 text-center self-center my-auto p-10 text-sm">Drag actions here to build your flow</p>
+            </div>
+        </section>
+
+        <!-- Configuration Panel (Right Sidebar) -->
+        <aside id="configPanelContainer" class="w-72 md:w-96 bg-slate-800 p-4 overflow-y-auto shadow-lg flex-shrink-0 border-l border-slate-700">
+             <div id="configFormInnerContainer">
+                <p class="text-slate-400 text-sm">Select a step to configure.</p>
+            </div>
+        </aside>
+    </main>
+
+    <!-- Modals -->
+    <div id="testResultsModal" class="fixed inset-0 bg-black/80 flex items-center justify-center hidden z-50 p-4 transition-opacity duration-300">
+        <div class="modal-content p-5 rounded-lg shadow-xl max-w-3xl w-full max-h-[90vh] flex flex-col">
+            <div class="flex justify-between items-center mb-4 flex-shrink-0">
+                <h3 class="text-xl font-semibold text-cyan-400">Test Execution Results</h3>
+                <button id="closeResultsModalBtn" class="text-slate-400 hover:text-slate-100">
+                    <svg class="h-6 w-6" fill="none" stroke="currentColor"><use xlink:href="#icon-close"></use></svg>
+                </button>
+            </div>
+            <div id="resultsContent" class="overflow-y-auto flex-grow text-sm space-y-2">
+                <p class="text-slate-400">No results yet.</p>
+            </div>
+            <div id="testIdDisplay" class="mt-3 pt-3 border-t border-slate-700 text-xs text-slate-500 flex-shrink-0"></div>
+        </div>
+    </div>
+
+    <div id="settingsModal" class="fixed inset-0 bg-black/80 flex items-center justify-center hidden z-50 p-4 transition-opacity duration-300">
+        <div class="modal-content p-6 rounded-lg shadow-xl max-w-md w-full">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-xl font-semibold text-cyan-400">Application Settings</h3>
+                <button id="closeSettingsModalBtn" class="text-slate-400 hover:text-slate-100">
+                     <svg class="h-6 w-6" fill="none" stroke="currentColor"><use xlink:href="#icon-close"></use></svg>
+                </button>
+            </div>
+            <div class="space-y-5">
+                <div>
+                    <label for="apiBaseUrl" class="block text-sm font-medium text-slate-300 mb-1">API Base URL</label>
+                    <input type="text" id="apiBaseUrl" class="input-field w-full rounded-md shadow-sm py-2 px-3 sm:text-sm">
+                </div>
+                <hr class="border-slate-700">
+                <h4 class="text-md font-semibold text-slate-200">Default Execution Options</h4>
+                <div>
+                    <label for="browserSelect" class="block text-sm font-medium text-slate-300 mb-1">Browser</label>
+                    <select id="browserSelect" class="input-field w-full rounded-md shadow-sm py-2 px-3 sm:text-sm">
+                        <option value="chromium">Chromium</option>
+                        <option value="firefox">Firefox</option>
+                        <option value="webkit">WebKit</option>
+                    </select>
+                </div>
+                <div class="flex items-center space-x-2">
+                    <input id="headlessCheckbox" type="checkbox" class="h-4 w-4 text-cyan-500 bg-slate-700 border-slate-600 rounded focus:ring-cyan-500 focus:ring-offset-slate-800">
+                    <label for="headlessCheckbox" class="text-sm text-slate-300">Run Headless</label>
+                </div>
+                <div class="flex items-center space-x-2">
+                    <input id="saveScreenshotsCheckbox" type="checkbox" class="h-4 w-4 text-cyan-500 bg-slate-700 border-slate-600 rounded focus:ring-cyan-500 focus:ring-offset-slate-800">
+                    <label for="saveScreenshotsCheckbox" class="text-sm text-slate-300">Save Screenshots (on failure)</label>
+                </div>
+                <button id="saveSettingsBtn" class="w-full btn-primary text-white px-4 py-2.5 rounded-md text-sm font-medium mt-2 transition-colors">Save Settings</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- Constants for SVG Icons (example, add more as needed) ---
+        const ICONS = {
+            NAVIGATION: `<svg class="h-5 w-5 mr-2 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 9l3 3m0 0l-3 3m3-3H8m13 0a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>`,
+            ASSERTIONS: `<svg class="h-5 w-5 mr-2 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>`,
+            INTERACTIONS: `<svg class="h-5 w-5 mr-2 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.042 21.672L13.684 16.6m0 0l-2.51 2.224a1 1 0 01-1.357 0l-2.512-2.224M13.684 16.6l-2.088-6.548m2.088 6.548L15.44 9.972M5 12h14" /></svg>`, // Click-like icon
+            CONDITIONALS: `<svg class="h-5 w-5 mr-2 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" /></svg>`,
+            WAITS: `<svg class="h-5 w-5 mr-2 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>`,
+            NETWORK_API: `<svg class="h-5 w-5 mr-2 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10m16-5H4m16 0l-3 3m3-3l-3-3m3 3H4" /></svg>`, // Generic network icon
+            UTILITY: `<svg class="h-5 w-5 mr-2 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" /></svg>`,
+            SELECTORS: `<svg class="h-5 w-5 mr-2 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>`,
+            QA_SPECIFIC: `<svg class="h-5 w-5 mr-2 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m0-4l2 2m-2-2l-2 2m2-2l2 2M3 12l6.414 6.414a2 2 0 002.828 0L21 12" /></svg>` // Checklist/verification
+        };
+
+        const ACTION_CATEGORIES_CONFIG = {
+            NAVIGATION: { name: 'Navigation', color: 'border-blue-500', itemColor: 'bg-blue-500/20 hover:bg-blue-500/30 text-blue-300', icon: ICONS.NAVIGATION },
+            ASSERTIONS: { name: 'Assertions', color: 'border-emerald-500', itemColor: 'bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300', icon: ICONS.ASSERTIONS },
+            SELECTORS: { name: 'Selectors', color: 'border-purple-500', itemColor: 'bg-purple-500/20 hover:bg-purple-500/30 text-purple-300', icon: ICONS.SELECTORS },
+            INTERACTIONS: { name: 'Interactions', color: 'border-orange-500', itemColor: 'bg-orange-500/20 hover:bg-orange-500/30 text-orange-300', icon: ICONS.INTERACTIONS },
+            CONDITIONALS: { name: 'Conditionals & Loops', color: 'border-yellow-500', itemColor: 'bg-yellow-500/20 hover:bg-yellow-500/30 text-yellow-300', icon: ICONS.CONDITIONALS },
+            WAITS: { name: 'Waits', color: 'border-teal-500', itemColor: 'bg-teal-500/20 hover:bg-teal-500/30 text-teal-300', icon: ICONS.WAITS },
+            NETWORK_API: { name: 'Network & API', color: 'border-pink-500', itemColor: 'bg-pink-500/20 hover:bg-pink-500/30 text-pink-300', icon: ICONS.NETWORK_API },
+            QA_SPECIFIC: { name: 'QA Specific', color: 'border-cyan-500', itemColor: 'bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-300', icon: ICONS.QA_SPECIFIC },
+            UTILITY: { name: 'Utility', color: 'border-slate-500', itemColor: 'bg-slate-500/20 hover:bg-slate-500/30 text-slate-300', icon: ICONS.UTILITY },
+        };
+
+        const ACTIONS = [
+            // Navigation
+            { id: 'open_url', name: 'Open URL', category: 'NAVIGATION', params: [{ name: 'url', type: 'url', label: 'URL', required: true, placeholder: 'https://example.com' }] },
+            { id: 'go_back', name: 'Go Back', category: 'NAVIGATION', params: [] },
+            { id: 'go_forward', name: 'Go Forward', category: 'NAVIGATION', params: [] },
+            { id: 'reload', name: 'Reload Page', category: 'NAVIGATION', params: [] },
+            { id: 'wait_for_navigation', name: 'Wait For Navigation', category: 'NAVIGATION', params: [{name: 'timeout', type: 'number', label: 'Timeout (ms)', placeholder: '30000', default: 30000}, {name: 'wait_until', type: 'select', label: 'Wait Condition', options: ['load', 'domcontentloaded', 'networkidle'], default: 'load'}] },
+
+            // Assertions
+            { id: 'assert_text', name: 'Assert Text', category: 'ASSERTIONS', params: [{ name: 'selector', type: 'text', label: 'Selector (CSS/XPath)', required: true }, { name: 'expected_text', type: 'text', label: 'Expected Text', required: true }, {name: 'match_type', type: 'select', label: 'Match Type', options: ['exact', 'contains', 'regex'], default: 'exact'}] },
+            { id: 'assert_title', name: 'Assert Page Title', category: 'ASSERTIONS', params: [{ name: 'expected_title', type: 'text', label: 'Expected Title', required: true }, {name: 'match_type', type: 'select', label: 'Match Type', options: ['exact', 'contains'], default: 'exact'}] },
+            { id: 'assert_url', name: 'Assert Current URL', category: 'ASSERTIONS', params: [{ name: 'expected_url', type: 'url', label: 'Expected URL', required: true }, {name: 'match_type', type: 'select', label: 'Match Type', options: ['exact', 'contains', 'regex'], default: 'exact'}] },
+            { id: 'assert_element_exists', name: 'Assert Element Exists', category: 'ASSERTIONS', params: [{ name: 'selector', type: 'text', label: 'Selector (CSS/XPath)', required: true }, {name: 'should_exist', type: 'boolean', label: 'Should Exist', default: true}] },
+            { id: 'assert_attr', name: 'Assert Attribute', category: 'ASSERTIONS', params: [{ name: 'selector', type: 'text', label: 'Selector', required: true }, { name: 'attribute_name', type: 'text', label: 'Attribute Name', required: true }, { name: 'expected_value', type: 'text', label: 'Expected Value' }, {name: 'match_type', type: 'select', label: 'Match Type', options: ['exact', 'contains', 'regex'], default: 'exact'}] },
+            { id: 'assert_response_code', name: 'Assert Response Code', category: 'ASSERTIONS', params: [{name: 'url_pattern', type: 'text', label: 'URL Pattern (Regex)', placeholder: '.*api/data.*'}, {name: 'expected_code', type: 'number', label: 'Expected Status Code', required: true, placeholder: '200'}]},
+
+            // Selectors
+            { id: 'get_text', name: 'Get Text from Element', category: 'SELECTORS', params: [{ name: 'selector', type: 'text', label: 'Selector', required: true }, { name: 'variable_name', type: 'text', label: 'Save to Variable', required: true }] },
+            { id: 'get_attr', name: 'Get Attribute Value', category: 'SELECTORS', params: [{ name: 'selector', type: 'text', label: 'Selector', required: true }, { name: 'attribute_name', type: 'text', label: 'Attribute Name', required: true }, { name: 'variable_name', type: 'text', label: 'Save to Variable', required: true }] },
+            { id: 'check_xpath', name: 'Check XPath', category: 'SELECTORS', params: [{ name: 'xpath', type: 'text', label: 'XPath Expression', required: true }, { name: 'variable_name', type: 'text', label: 'Save Result (true/false) to Variable', required: true }] },
+            { id: 'get_element_count', name: 'Get Element Count', category: 'SELECTORS', params: [{ name: 'selector', type: 'text', label: 'Selector', required: true }, { name: 'variable_name', type: 'text', label: 'Save Count to Variable', required: true }] },
+
+            // Interactions
+            { id: 'click', name: 'Click Element', category: 'INTERACTIONS', params: [{ name: 'selector', type: 'text', label: 'Selector', required: true }] },
+            { id: 'type', name: 'Type Text', category: 'INTERACTIONS', params: [{ name: 'selector', type: 'text', label: 'Selector', required: true }, { name: 'text', type: 'text', label: 'Text to Type', required: true, placeholder: 'Hello {{name}}' }, { name: 'delay', type: 'number', label: 'Delay (ms per char)', placeholder: '100'}] },
+            { id: 'hover', name: 'Hover Over Element', category: 'INTERACTIONS', params: [{ name: 'selector', type: 'text', label: 'Selector', required: true }] },
+            { id: 'select', name: 'Select Option', category: 'INTERACTIONS', params: [{ name: 'selector', type: 'text', label: 'Select Element Selector', required: true }, { name: 'value', type: 'text', label: 'Option Value/Text/Index (prefix with index: or text:)' , required: true, placeholder: 'valueToSelect or index:2 or text:Option Label'}] },
+            { id: 'scroll', name: 'Scroll Page/Element', category: 'INTERACTIONS', params: [{name: 'target', type: 'select', label: 'Scroll Target', options: ['window', 'element'], default: 'window'}, { name: 'selector', type: 'text', label: 'Element Selector (if target is element)'}, {name: 'direction', type: 'select', label: 'Direction', options:['to_bottom', 'to_top', 'to_element_if_selector_provided'], default: 'to_bottom'}, {name: 'x', type: 'number', label: 'X pixels (for window scroll)'}, {name: 'y', type: 'number', label: 'Y pixels (for window scroll)'}] },
+            { id: 'upload_file', name: 'Upload File', category: 'INTERACTIONS', params: [{ name: 'selector', type: 'text', label: 'File Input Selector', required: true }, { name: 'file_path', type: 'text', label: 'File Path (on server or accessible)', required: true, placeholder: '/path/to/your/file.txt'}] },
+            { id: 'drag_and_drop', name: 'Drag and Drop', category: 'INTERACTIONS', params: [{name: 'source_selector', type: 'text', label: 'Source Element Selector', required: true}, {name: 'target_selector', type: 'text', label: 'Target Element Selector', required: true}] },
+
+            // Conditionals
+            { id: 'if_equals', name: 'If Equals', category: 'CONDITIONALS', params: [{ name: 'value1', type: 'text', label: 'Value 1', required: true, placeholder: '{{var}} or text' }, { name: 'value2', type: 'text', label: 'Value 2', required: true }, { name: 'next_true', type: 'next_step_select', label: 'Next (If True)' }, { name: 'next_false', type: 'next_step_select', label: 'Next (If False)' }] },
+            { id: 'if_contains', name: 'If Contains', category: 'CONDITIONALS', params: [{ name: 'string_to_check', type: 'text', label: 'String to Check', required: true, placeholder: '{{myString}}' }, { name: 'substring', type: 'text', label: 'Substring to Find', required: true }, { name: 'next_true', type: 'next_step_select', label: 'Next (If True)' }, { name: 'next_false', type: 'next_step_select', label: 'Next (If False)' }] },
+            { id: 'if_element_exists', name: 'If Element Exists', category: 'CONDITIONALS', params: [{ name: 'selector', type: 'text', label: 'Selector', required: true }, { name: 'next_true', type: 'next_step_select', label: 'Next (If Exists)' }, { name: 'next_false', type: 'next_step_select', label: 'Next (If Not Exists)' }] },
+            { id: 'if_status_code', name: 'If Network Status Code', category: 'CONDITIONALS', params: [{name: 'url_pattern', type: 'text', label: 'URL Pattern (Regex)', placeholder: '.*api/data.*'}, {name: 'expected_code', type: 'number', label: 'Expected Status Code', required: true, placeholder: '200'}, { name: 'next_true', type: 'next_step_select', label: 'Next (If Matches)' }, { name: 'next_false', type: 'next_step_select', label: 'Next (If Not Matches)' }]},
+            { id: 'switch', name: 'Switch', category: 'CONDITIONALS', params: [
+                { name: 'switch_on_value', type: 'text', label: 'Value to Switch On', required: true, placeholder: '{{variable}} or text' },
+                { name: 'cases', type: 'textarea', label: 'Cases (JSON: [{"value": "val1", "next": "stepA"},...])', placeholder: '[{"value": "abc", "next": "stepName1"}, {"value": "xyz", "next": "stepName2"}]', required: true},
+                { name: 'next_default', type: 'next_step_select', label: 'Next (Default Case)', required: true }
+            ]},
+            { id: 'loop', name: 'Loop', category: 'CONDITIONALS', params: [
+                { name: 'loop_type', type: 'select', label: 'Loop Type', options: ['count', 'collection'], default: 'count', required: true},
+                { name: 'count', type: 'number', label: 'Number of Iterations (if type is count)', placeholder: '5' },
+                { name: 'collection', type: 'text', label: 'Collection Variable (if type is collection)', placeholder: '{{myArray}}' },
+                { name: 'item_variable', type: 'text', label: 'Loop Item Variable Name', placeholder: 'currentItem (optional)' },
+                { name: 'index_variable', type: 'text', label: 'Loop Index Variable Name', placeholder: 'currentIndex (optional)' },
+                { name: 'next_in_loop', type: 'next_step_select', label: 'First Step in Loop', required: true },
+                { name: 'next_after_loop', type: 'next_step_select', label: 'Next (After Loop Finishes)', required: true }
+            ]},
+            { id: 'try_catch', name: 'Try Catch Block', category: 'CONDITIONALS', params: [
+                { name: 'next_try', type: 'next_step_select', label: 'First Step in Try Block', required: true },
+                { name: 'next_catch', type: 'next_step_select', label: 'First Step in Catch Block', required: true },
+                { name: 'error_variable', type: 'text', label: 'Save Error Message to Variable (optional)', placeholder: 'errorMessage' }
+            ]},
+
+            // Waits
+            { id: 'wait_for_selector', name: 'Wait For Selector', category: 'WAITS', params: [{ name: 'selector', type: 'text', label: 'Selector', required: true }, { name: 'timeout', type: 'number', label: 'Timeout (ms)', default: 30000 }, {name: 'state', type: 'select', label: 'State', options: ['visible', 'hidden', 'attached', 'detached'], default: 'visible'}] },
+            { id: 'wait_for_timeout', name: 'Wait For Fixed Timeout', category: 'WAITS', params: [{ name: 'timeout', type: 'number', label: 'Timeout (ms)', required: true, placeholder: '1000' }] },
+            { id: 'wait_until_text', name: 'Wait Until Text Appears', category: 'WAITS', params: [{ name: 'selector', type: 'text', label: 'Selector', required: true }, { name: 'text_to_find', type: 'text', label: 'Text to Find', required: true }, { name: 'timeout', type: 'number', label: 'Timeout (ms)', default: 30000 }] },
+
+            // Network/API
+            { id: 'intercept_request', name: 'Intercept Request', category: 'NETWORK_API', params: [{ name: 'url_pattern', type: 'text', label: 'URL Pattern (Regex)', required: true, placeholder: '.*' }, { name: 'action', type: 'select', options: ['continue', 'abort', 'modify'], label: 'Action', default: 'continue'}, { name: 'modification_rules', type: 'textarea', label: 'Modification Rules (JSON, if action=modify)', placeholder: '{"headers": {"X-My-Header": "value"}, "postData": {"key": "newValue"}}'}]},
+            { id: 'mock_response', name: 'Mock Response', category: 'NETWORK_API', params: [{ name: 'url_pattern', type: 'text', label: 'URL Pattern (Regex)', required: true }, { name: 'status_code', type: 'number', label: 'Status Code', default: 200 }, {name: 'content_type', type: 'text', label: 'Content-Type', default: 'application/json'}, {name: 'body', type: 'textarea', label: 'Response Body (JSON or text)', placeholder: '{"data": "mocked"}'}]},
+            { id: 'validate_network_call', name: 'Validate Network Call', category: 'NETWORK_API', params: [{name: 'url_pattern', type: 'text', label: 'URL Pattern (Regex)', required: true}, {name: 'method', type: 'select', options: ['GET', 'POST', 'PUT', 'DELETE', 'ANY'], default: 'ANY'}, {name: 'expected_status', type: 'number', label: 'Expected Status Code', placeholder: '200'}, {name: 'timeout', type: 'number', label: 'Timeout (ms)', default: 5000}, {name: 'variable_name', type: 'text', label: 'Save Call Details to Var (optional)'}]},
+            { id: 'measure_performance', name: 'Measure Page Performance', category: 'NETWORK_API', params: [{name: 'variable_name', type: 'text', label: 'Save Metrics to Variable', required: true}]},
+            { id: 'capture_network_logs', name: 'Capture Network Logs (HAR)', category: 'NETWORK_API', params: [{name: 'variable_name', type: 'text', label: 'Save HAR data to Variable', required: true}]},
+
+            // QA-Specific
+            { id: 'verify_xpath', name: 'Verify XPath Value', category: 'QA_SPECIFIC', params: [{ name: 'xpath', type: 'text', label: 'XPath', required: true }, { name: 'expected_value', type: 'text', label: 'Expected Value', required: true }]},
+            { id: 'verify_redirected_url', name: 'Verify Redirected URL', category: 'QA_SPECIFIC', params: [{ name: 'initial_url_action_step_id', type: 'text', label: 'Step ID that initiates navigation (e.g., click)', required: true }, {name: 'expected_final_url', type: 'text', label: 'Expected Final URL', required: true}, {name: 'timeout', type: 'number', label: 'Timeout (ms)', default: 10000}]},
+
+            // Utility
+            { id: 'screenshot', name: 'Take Screenshot', category: 'UTILITY', params: [{ name: 'filename', type: 'text', label: 'Filename (optional)', placeholder: 'my_screenshot.png' }, {name: 'full_page', type: 'boolean', label: 'Full Page', default: true}, {name: 'selector', type: 'text', label: 'Element Selector (optional for element screenshot)'}] },
+            { id: 'save_value', name: 'Save Value to Variable', category: 'UTILITY', params: [{ name: 'variable_name', type: 'text', label: 'Variable Name', required: true, placeholder: 'myVar' }, { name: 'value', type: 'text', label: 'Value', required: true, placeholder: 'Some text or {{otherVar}}' }] },
+            { id: 'print_log', name: 'Print Log Message', category: 'UTILITY', params: [{ name: 'message', type: 'text', label: 'Message', required: true, placeholder: 'Current value: {{myVar}}' }] },
+            { id: 'set_variable', name: 'Set Variable (Alias for Save Value)', category: 'UTILITY', params: [{ name: 'variable_name', type: 'text', label: 'Variable Name', required: true }, { name: 'value', type: 'text', label: 'Value', required: true }] },
+            { id: 'get_cookie', name: 'Get Cookie', category: 'UTILITY', params: [{name: 'cookie_name', type: 'text', label: 'Cookie Name (optional, gets all if empty)'}, { name: 'variable_name', type: 'text', label: 'Save Cookie(s) to Variable', required: true }]},
+            { id: 'set_cookie', name: 'Set Cookie', category: 'UTILITY', params: [{name: 'name', type: 'text', label: 'Cookie Name', required: true}, {name: 'value', type: 'text', label: 'Cookie Value', required: true}, {name: 'url', type: 'url', label: 'URL (optional)'}, {name: 'domain', type: 'text', label: 'Domain (optional)'}, {name: 'path', type: 'text', label: 'Path (optional, default /)'}, {name: 'expires', type: 'number', label: 'Expires (timestamp in seconds, optional)'}, {name: 'httpOnly', type: 'boolean', label: 'HTTPOnly', default: false}, {name: 'secure', type: 'boolean', label: 'Secure', default: false}, {name: 'sameSite', type: 'select', options: ['Strict', 'Lax', 'None'], label: 'SameSite (optional)'}]}
+        ];
+
+        // --- State & API Config ---
+        let testFlow = { test_name: "Untitled Test Flow", start: null, steps: {} };
+        let selectedStepId = null;
+        let currentlyDraggingActionId = null;
+        const API_ENDPOINT_EXECUTE_PATH = '/api/v1/execute';
+        const API_ENDPOINT_RESULTS_PATH = '/api/v1/results/'; 
+        let currentApiBaseUrl = 'http://localhost:3000';
+
+
+        // --- DOM Elements ---
+        const actionsPaletteEl = document.getElementById('actionsPalette');
+        const canvasDropZoneEl = document.getElementById('canvasDropZone');
+        const configFormContainerEl = document.getElementById('configFormInnerContainer');
+        const testFlowNameInput = document.getElementById('testFlowName');
+        const newTestBtn = document.getElementById('newTestBtn');
+        const saveTestBtn = document.getElementById('saveTestBtn');
+        const loadTestFile = document.getElementById('loadTestFile');
+        const executeTestBtn = document.getElementById('executeTestBtn');
+        const testResultsBtn = document.getElementById('testResultsBtn');
+        const settingsBtn = document.getElementById('settingsBtn');
+        const testResultsModal = document.getElementById('testResultsModal');
+        const closeResultsModalBtn = document.getElementById('closeResultsModalBtn');
+        const resultsContentEl = document.getElementById('resultsContent');
+        const testIdDisplayEl = document.getElementById('testIdDisplay');
+        const settingsModal = document.getElementById('settingsModal');
+        const closeSettingsModalBtn = document.getElementById('closeSettingsModalBtn');
+        const saveSettingsBtn = document.getElementById('saveSettingsBtn');
+        const apiBaseUrlInput = document.getElementById('apiBaseUrl');
+        const browserSelect = document.getElementById('browserSelect');
+        const headlessCheckbox = document.getElementById('headlessCheckbox');
+        const saveScreenshotsCheckbox = document.getElementById('saveScreenshotsCheckbox');
+
+        // --- Helper Functions ---
+        function generateUniqueStepId(actionId) {
+            return `${actionId.replace(/[^a-zA-Z0-9]/g, '_')}_${Date.now()}_${Math.floor(Math.random() * 1000)}`;
+        }
+        function sanitizeForHtmlId(str) {
+            return `el_${str.replace(/[^a-zA-Z0-9-_]/g, '_')}`;
+        }
+
+        // --- Initialization ---
+        function init() {
+            loadSettings();
+            renderActionsPalette();
+            renderCanvas();
+            renderConfigPanel();
+            attachEventListeners();
+            testFlowNameInput.value = testFlow.test_name;
+        }
+
+        function loadSettings() {
+            currentApiBaseUrl = localStorage.getItem('noCodeQA_apiBaseUrl') || 'http://localhost:3000';
+            apiBaseUrlInput.value = currentApiBaseUrl;
+            browserSelect.value = localStorage.getItem('noCodeQA_browser') || 'chromium';
+            headlessCheckbox.checked = (localStorage.getItem('noCodeQA_headless') !== 'false'); // Default true
+            saveScreenshotsCheckbox.checked = (localStorage.getItem('noCodeQA_saveScreenshots') !== 'false'); // Default true
+        }
+
+        function saveSettings() {
+            currentApiBaseUrl = apiBaseUrlInput.value.trim() || 'http://localhost:3000';
+            localStorage.setItem('noCodeQA_apiBaseUrl', currentApiBaseUrl);
+            localStorage.setItem('noCodeQA_browser', browserSelect.value);
+            localStorage.setItem('noCodeQA_headless', headlessCheckbox.checked);
+            localStorage.setItem('noCodeQA_saveScreenshots', saveScreenshotsCheckbox.checked);
+            settingsModal.classList.add('hidden');
+        }
+
+        // --- Rendering Functions ---
+        function renderActionsPalette() {
+            actionsPaletteEl.innerHTML = `<h2 class="text-lg font-semibold mb-4 text-cyan-400">Actions Library</h2>`;
+            const categorizedActions = {};
+            ACTIONS.forEach(action => {
+                if (!categorizedActions[action.category]) categorizedActions[action.category] = [];
+                categorizedActions[action.category].push(action);
+            });
+
+            for (const categoryKey in categorizedActions) {
+                const categoryConfig = ACTION_CATEGORIES_CONFIG[categoryKey] || { name: categoryKey, itemColor: 'bg-slate-600 hover:bg-slate-500 text-slate-200', icon: '' };
+                const categoryEl = document.createElement('div');
+                categoryEl.className = 'mb-5';
+                categoryEl.innerHTML = `<h3 class="text-xs font-semibold text-slate-400 mb-2 uppercase tracking-wider">${categoryConfig.name}</h3>`;
+                
+                const actionListEl = document.createElement('div');
+                actionListEl.className = 'space-y-1.5';
+                categorizedActions[categoryKey].forEach(action => {
+                    const actionEl = document.createElement('div');
+                    actionEl.className = `action-item flex items-center p-2.5 rounded-md cursor-grab text-sm transition-colors shadow-sm ${categoryConfig.itemColor}`;
+                    actionEl.draggable = true;
+                    actionEl.dataset.actionId = action.id;
+                    actionEl.innerHTML = `${categoryConfig.icon || ''} <span class="truncate">${action.name}</span>`;
+                    
+                    actionEl.addEventListener('dragstart', (e) => {
+                        e.dataTransfer.setData('text/plain', action.id);
+                        currentlyDraggingActionId = action.id;
+                        actionEl.classList.add('dragging');
+                    });
+                    actionEl.addEventListener('dragend', () => {
+                        actionEl.classList.remove('dragging');
+                        currentlyDraggingActionId = null;
+                    });
+                    actionListEl.appendChild(actionEl);
+                });
+                categoryEl.appendChild(actionListEl);
+                actionsPaletteEl.appendChild(categoryEl);
+            }
+        }
+
+        function renderCanvas() {
+            canvasDropZoneEl.innerHTML = ''; 
+            const stepIds = Object.keys(testFlow.steps);
+
+            if (stepIds.length === 0) {
+                canvasDropZoneEl.innerHTML = `<p class="text-slate-500 text-center self-center my-auto p-10 text-sm">Drag actions here to build your flow</p>`;
+                return;
+            }
+            
+            let orderedStepElements = [];
+            let currentDisplayId = testFlow.start;
+            const visitedForDisplay = new Set();
+
+            while(currentDisplayId && testFlow.steps[currentDisplayId] && currentDisplayId !== 'end' && !visitedForDisplay.has(currentDisplayId)) {
+                orderedStepElements.push(createStepElement(currentDisplayId, testFlow.steps[currentDisplayId]));
+                visitedForDisplay.add(currentDisplayId);
+                const currentStep = testFlow.steps[currentDisplayId];
+                // Basic linear 'next'. More complex branching (if/loop) is configured, not visually drawn here.
+                currentDisplayId = currentStep.next; 
+            }
+
+            stepIds.forEach(id => {
+                if (!visitedForDisplay.has(id)) {
+                    orderedStepElements.push(createStepElement(id, testFlow.steps[id]));
+                }
+            });
+            
+            orderedStepElements.forEach(el => canvasDropZoneEl.appendChild(el));
+        }
+
+        function createStepElement(stepId, stepData) {
+            const actionDefinition = ACTIONS.find(a => a.id === stepData.action);
+            if (!actionDefinition) return document.createElement('div'); 
+
+            const categoryConfig = ACTION_CATEGORIES_CONFIG[actionDefinition.category] || { color: 'border-slate-600', icon: '' };
+            const stepEl = document.createElement('div');
+            stepEl.id = `canvas_step_${sanitizeForHtmlId(stepId)}`;
+            stepEl.className = `canvas-step p-3 rounded-lg shadow-md cursor-pointer border-2 flex justify-between items-center ${categoryConfig.color}`;
+            
+            const isSelected = selectedStepId === stepId;
+            stepEl.classList.toggle('border-cyan-400', isSelected);
+            stepEl.classList.toggle('ring-2', isSelected);
+            stepEl.classList.toggle('ring-cyan-400', isSelected);
+            stepEl.classList.toggle('ring-offset-2', isSelected);
+            stepEl.classList.toggle('ring-offset-slate-950', isSelected);
+            stepEl.classList.toggle('border-transparent', !isSelected && testFlow.start !== stepId);
+            stepEl.classList.toggle(categoryConfig.color, !isSelected && testFlow.start !== stepId);
+
+
+            if (testFlow.start === stepId) {
+                 stepEl.classList.add('border-l-green-400', 'border-green-400'); // Thicker left border for start
+                 stepEl.classList.remove(categoryConfig.color, 'border-transparent'); // Ensure start color overrides category border
+            }
+
+            const stepDisplayName = stepData.customName || stepId;
+
+            stepEl.innerHTML = `
+                <div class="flex items-center overflow-hidden min-w-0">
+                    ${categoryConfig.icon || ''}
+                    <div class="ml-2 min-w-0">
+                        <span class="font-medium text-sm block truncate text-slate-100" title="${actionDefinition.name}">${actionDefinition.name}</span>
+                        <span class="text-xs text-slate-400 block truncate" title="${stepDisplayName}">ID: ${stepDisplayName}</span>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-1.5 flex-shrink-0 ml-2">
+                    ${testFlow.start !== stepId ? `<button class="set-start-btn p-1.5 rounded text-green-400 hover:bg-green-500/20" title="Set as Start Step" data-step-id="${stepId}"><svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2.5"><use xlink:href="#icon-start"></use></svg></button>` : '<span class="text-xs text-green-400 font-semibold px-1 py-0.5 rounded bg-green-500/10">START</span>'}
+                    <button class="delete-step-btn p-1.5 rounded text-red-400 hover:bg-red-500/20" title="Delete Step" data-step-id="${stepId}"><svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2"><use xlink:href="#icon-trash"></use></svg></button>
+                </div>
+            `;
+
+            stepEl.addEventListener('click', (e) => {
+                e.stopPropagation(); 
+                if (e.target.closest('.delete-step-btn')) {
+                    deleteStep(e.target.closest('.delete-step-btn').dataset.stepId);
+                } else if (e.target.closest('.set-start-btn')) {
+                    setStartStep(e.target.closest('.set-start-btn').dataset.stepId);
+                } else {
+                    selectedStepId = stepId;
+                    renderCanvas(); 
+                    renderConfigPanel();
+                }
+            });
+            return stepEl;
+        }
+
+        function renderConfigPanel() {
+            configFormContainerEl.innerHTML = '<h2 class="config-heading text-lg">Step Configuration</h2>';
+            if (!selectedStepId || !testFlow.steps[selectedStepId]) {
+                configFormContainerEl.innerHTML += `<p class="text-slate-400 text-sm">Select a step on the canvas to configure it.</p>`;
+                return;
+            }
+
+            const stepData = testFlow.steps[selectedStepId];
+            const actionDefinition = ACTIONS.find(a => a.id === stepData.action);
+
+            if (!actionDefinition) {
+                configFormContainerEl.innerHTML += `<p class="text-red-400">Error: Action definition not found for ${stepData.action}.</p>`;
+                return;
+            }
+
+            const form = document.createElement('form');
+            form.className = 'space-y-4 text-sm';
+            form.id = 'stepConfigForm';
+            form.addEventListener('submit', (e) => e.preventDefault());
+
+            let formHtml = `<div class="p-1">
+                <label for="config_stepName" class="block text-xs font-medium config-label mb-1">Step Name (ID)</label>
+                <input type="text" id="config_stepName" name="customName" value="${stepData.customName || ''}" placeholder="${selectedStepId} (auto)" class="input-field w-full rounded-md shadow-sm py-1.5 px-2 text-xs placeholder-slate-500">
+                <p class="text-xs text-slate-500 mt-1">Optional. If set, must be unique and use a-z, 0-9, _, -.</p>
+            </div>`;
+            
+            if (actionDefinition.params.length > 0) {
+                formHtml += `<h3 class="config-heading text-base mt-3">Parameters</h3>`;
+            }
+
+            actionDefinition.params.forEach(param => {
+                const paramValue = stepData[param.name] !== undefined ? stepData[param.name] : (param.default !== undefined ? param.default : '');
+                formHtml += `<div class="p-1"><label for="config_param_${param.name}" class="block text-xs font-medium config-label mb-1">${param.label || param.name.replace(/_/g, ' ')} ${param.required ? '<span class="text-red-400">*</span>' : ''}</label>`;
+                
+                const commonClasses = "input-field w-full rounded-md shadow-sm py-1.5 px-2 text-xs placeholder-slate-500";
+
+                if (param.type === 'textarea') {
+                    formHtml += `<textarea id="config_param_${param.name}" name="${param.name}" rows="3" class="${commonClasses}" placeholder="${param.placeholder || ''}">${paramValue}</textarea>`;
+                } else if (param.type === 'select' && param.options) {
+                    formHtml += `<select id="config_param_${param.name}" name="${param.name}" class="${commonClasses}">`;
+                    param.options.forEach(opt => {
+                        const optionValue = typeof opt === 'object' ? opt.value : opt;
+                        const optionLabel = typeof opt === 'object' ? opt.label : opt;
+                        formHtml += `<option value="${optionValue}" ${paramValue == optionValue ? 'selected' : ''}>${optionLabel}</option>`; // Use == for type coercion with numbers from select
+                    });
+                    formHtml += `</select>`;
+                } else if (param.type === 'next_step_select') {
+                     formHtml += createNextStepDropdownHtml(param.name, paramValue, selectedStepId, commonClasses);
+                } else if (param.type === 'boolean') {
+                     formHtml += `<div class="flex items-center"><input type="checkbox" id="config_param_${param.name}" name="${param.name}" class="h-4 w-4 text-cyan-500 bg-slate-700 border-slate-600 rounded focus:ring-cyan-500 focus:ring-offset-slate-800 mr-2" ${paramValue ? 'checked' : ''}><span class="text-slate-300">${param.label || param.name}</span></div>`;
+                }
+                else { 
+                    formHtml += `<input type="${param.type || 'text'}" id="config_param_${param.name}" name="${param.name}" value="${paramValue}" class="${commonClasses}" placeholder="${param.placeholder || ''}" ${param.required ? 'required' : ''}>`;
+                }
+                if (param.description) {
+                    formHtml += `<p class="text-xs text-slate-500 mt-1">${param.description}</p>`;
+                }
+                formHtml += `</div>`;
+            });
+
+            const hasSpecificNextParams = actionDefinition.params.some(p => p.name.startsWith('next_') && p.type === 'next_step_select');
+            if (!hasSpecificNextParams || ['try_catch', 'loop'].includes(actionDefinition.id) ) { // try_catch and loop still need a main 'next'
+                 formHtml += `<h3 class="config-heading text-base mt-4">Flow Control</h3>
+                              <div class="p-1"><label for="config_nextStep" class="block text-xs font-medium config-label mb-1">Default Next Step</label>
+                             ${createNextStepDropdownHtml('next', stepData.next, selectedStepId, "input-field w-full rounded-md shadow-sm py-1.5 px-2 text-xs")}
+                             </div>`;
+            }
+
+            form.innerHTML = formHtml;
+
+            form.addEventListener('input', (e) => { 
+                const formData = new FormData(form);
+                const currentStep = testFlow.steps[selectedStepId];
+                
+                const newCustomName = formData.get('customName').trim();
+                if (newCustomName && newCustomName !== selectedStepId) {
+                    const isNameTaken = Object.entries(testFlow.steps).some(([id, step]) =>
+                        id !== selectedStepId && ((step.customName === newCustomName) || id === newCustomName)
+                    );
+                    const isValidName = /^[a-zA-Z0-9._-]+$/.test(newCustomName);
+                    if (!isNameTaken && isValidName) {
+                        currentStep.customName = newCustomName;
+                    } else {
+                        if (e.target.name === 'customName') {
+                            e.target.value = currentStep.customName || ''; 
+                            e.target.classList.add('border-red-500');
+                            setTimeout(() => e.target.classList.remove('border-red-500'), 2000);
+                            console.warn("Custom name is invalid or taken: ", newCustomName);
+                        }
+                    }
+                } else if (!newCustomName) {
+                     delete currentStep.customName;
+                }
+
+
+                actionDefinition.params.forEach(param => {
+                    let value = formData.get(param.name);
+                    if (param.type === 'number') {
+                        currentStep[param.name] = (value === '' || value === null) ? (param.default !== undefined ? param.default : undefined) : parseFloat(value);
+                    } else if (param.type === 'boolean') {
+                        currentStep[param.name] = e.target.name === param.name ? e.target.checked : (formData.get(param.name) === 'on');
+                    } else {
+                        currentStep[param.name] = (value === '' && param.default !== undefined) ? param.default : value;
+                    }
+                });
+
+                if (formData.has('next')) currentStep.next = formData.get('next');
+                
+                renderCanvas(); 
+            });
+            configFormContainerEl.appendChild(form);
+        }
+        
+        function createNextStepDropdownHtml(paramName, currentValue, currentStepId, PcommonClasses) {
+            let selectHtml = `<select id="config_param_${paramName}" name="${paramName}" class="${PcommonClasses}">
+                <option value="end" ${currentValue === 'end' || !currentValue ? 'selected' : ''}>END OF FLOW</option>`;
+            Object.keys(testFlow.steps).forEach(id => {
+                if (id === currentStepId && !['next_in_loop'].includes(paramName)) return; // Prevent self-loop unless explicitly for in-loop
+                const stepDisplayName = testFlow.steps[id].customName || id;
+                const actionDef = ACTIONS.find(a => a.id === testFlow.steps[id].action);
+                const actionUserFriendlyName = actionDef ? actionDef.name : 'Unknown Action';
+                selectHtml += `<option value="${id}" ${currentValue === id ? 'selected' : ''}>${stepDisplayName} (${actionUserFriendlyName})</option>`;
+            });
+            selectHtml += `</select>`;
+            return selectHtml;
+        }
+
+        // --- Event Handlers & Logic ---
+        function attachEventListeners() {
+            testFlowNameInput.addEventListener('input', (e) => {
+                testFlow.test_name = e.target.value.trim() || "Untitled Test Flow";
+            });
+
+            canvasDropZoneEl.addEventListener('dragover', (e) => { e.preventDefault(); canvasDropZoneEl.classList.add('drop-target-highlight'); });
+            canvasDropZoneEl.addEventListener('dragleave', () => canvasDropZoneEl.classList.remove('drop-target-highlight'));
+            canvasDropZoneEl.addEventListener('drop', (e) => {
+                e.preventDefault();
+                canvasDropZoneEl.classList.remove('drop-target-highlight');
+                const actionId = e.dataTransfer.getData('text/plain') || currentlyDraggingActionId;
+                if (actionId) addStepToCanvas(actionId);
+                currentlyDraggingActionId = null;
+            });
+
+            newTestBtn.addEventListener('click', handleNewTest);
+            saveTestBtn.addEventListener('click', handleSaveTestFlow);
+            loadTestFile.addEventListener('change', handleLoadTestFlow);
+            executeTestBtn.addEventListener('click', handleExecuteTest);
+            
+            testResultsBtn.addEventListener('click', () => testResultsModal.classList.remove('hidden'));
+            closeResultsModalBtn.addEventListener('click', () => testResultsModal.classList.add('hidden'));
+            settingsBtn.addEventListener('click', () => settingsModal.classList.remove('hidden'));
+            closeSettingsModalBtn.addEventListener('click', () => settingsModal.classList.add('hidden'));
+            saveSettingsBtn.addEventListener('click', saveSettings);
+        }
+
+        function addStepToCanvas(actionId) {
+            const actionDefinition = ACTIONS.find(a => a.id === actionId);
+            if (!actionDefinition) return;
+
+            const newStepId = generateUniqueStepId(actionId);
+            const newStepData = { action: actionId, next: 'end' };
+            actionDefinition.params.forEach(param => {
+                if (param.default !== undefined) newStepData[param.name] = param.default;
+                if (param.type === 'next_step_select' && !newStepData[param.name]) newStepData[param.name] = 'end'; // Default next_... to end
+            });
+            
+            // Simplified linking: link to this new step if a step is selected and its 'next' is 'end'
+            // or if no step is selected and the flow has a last step ending in 'end'.
+            let linked = false;
+            if (selectedStepId && testFlow.steps[selectedStepId] && testFlow.steps[selectedStepId].next === 'end') {
+                const selectedDef = ACTIONS.find(a => a.id === testFlow.steps[selectedStepId].action);
+                // Avoid auto-linking if the selected step has specific branching (e.g. if_*, loop) unless it's a simple next
+                const hasSpecificNexts = selectedDef && selectedDef.params.some(p => p.name.startsWith('next_') && p.type === 'next_step_select');
+                if (!hasSpecificNexts) {
+                     testFlow.steps[selectedStepId].next = newStepId;
+                     linked = true;
+                }
+            }
+            
+            if (!linked) {
+                const stepIds = Object.keys(testFlow.steps);
+                if (stepIds.length > 0) {
+                    let lastStepId = testFlow.start;
+                    if (lastStepId && testFlow.steps[lastStepId]) {
+                        let count = 0; 
+                        while(testFlow.steps[lastStepId] && testFlow.steps[lastStepId].next !== 'end' && count < stepIds.length * 2) {
+                            lastStepId = testFlow.steps[lastStepId].next;
+                            if (!testFlow.steps[lastStepId]) break; 
+                            count++;
+                        }
+                        if (testFlow.steps[lastStepId] && testFlow.steps[lastStepId].next === 'end') {
+                            const lastStepDef = ACTIONS.find(a => a.id === testFlow.steps[lastStepId].action);
+                            const hasSpecificNextsLast = lastStepDef && lastStepDef.params.some(p => p.name.startsWith('next_') && p.type === 'next_step_select');
+                             if (!hasSpecificNextsLast) {
+                                testFlow.steps[lastStepId].next = newStepId;
+                             }
+                        }
+                    }
+                }
+            }
+
+
+            if (!testFlow.start) testFlow.start = newStepId;
+            
+            testFlow.steps[newStepId] = newStepData;
+            selectedStepId = newStepId; 
+
+            renderCanvas();
+            renderConfigPanel();
+        }
+        
+        function deleteStep(stepIdToDelete) {
+            if (!testFlow.steps[stepIdToDelete]) return;
+
+            const deletedStepData = { ...testFlow.steps[stepIdToDelete] }; // shallow copy
+            delete testFlow.steps[stepIdToDelete];
+
+            // Update references
+            for (const id in testFlow.steps) {
+                const currentStep = testFlow.steps[id];
+                const actionDef = ACTIONS.find(a => a.id === currentStep.action);
+                if (currentStep.next === stepIdToDelete) {
+                    currentStep.next = deletedStepData.next || 'end'; 
+                }
+                if (actionDef) {
+                    actionDef.params.forEach(param => {
+                        if (param.type === 'next_step_select' && currentStep[param.name] === stepIdToDelete) {
+                             // For conditionals, if a branch pointed to deleted, it should ideally go to deleted's next or end.
+                             // For simplicity here, we'll just set it to 'end'. More robust logic could patch it.
+                            currentStep[param.name] = deletedStepData[param.name] === deletedStepData.next ? (deletedStepData.next || 'end') : 'end'; 
+                        }
+                    });
+                }
+            }
+
+            if (testFlow.start === stepIdToDelete) {
+                let newStart = deletedStepData.next;
+                if (!newStart || newStart === 'end' || !testFlow.steps[newStart]) {
+                    const remainingStepIds = Object.keys(testFlow.steps);
+                    newStart = remainingStepIds.length > 0 ? remainingStepIds[0] : null;
+                }
+                testFlow.start = newStart;
+            }
+            
+            if (selectedStepId === stepIdToDelete) selectedStepId = null;
+
+            renderCanvas();
+            renderConfigPanel();
+        }
+
+        function setStartStep(stepId) {
+            if (testFlow.steps[stepId]) {
+                testFlow.start = stepId;
+                renderCanvas();
+                renderConfigPanel(); 
+            }
+        }
+
+        function handleNewTest() {
+            if (confirm("Create a new test flow? Unsaved changes will be lost.")) {
+                testFlow = { test_name: "Untitled Test Flow", start: null, steps: {} };
+                selectedStepId = null;
+                testFlowNameInput.value = testFlow.test_name;
+                renderCanvas();
+                renderConfigPanel();
+            }
+        }
+
+        function generateFlowJSON() {
+            const finalFlow = { test_name: testFlow.test_name, start: null, steps: {} };
+            const idToFinalKeyMap = {};
+
+            Object.entries(testFlow.steps).forEach(([id, step]) => {
+                const key = (step.customName && /^[a-zA-Z0-9._-]+$/.test(step.customName) && !finalFlow.steps[step.customName]) 
+                            ? step.customName 
+                            : id;
+                idToFinalKeyMap[id] = key;
+            });
+            
+            finalFlow.start = testFlow.start ? idToFinalKeyMap[testFlow.start] || testFlow.start : null;
+
+            Object.entries(testFlow.steps).forEach(([id, originalStep]) => {
+                const finalKey = idToFinalKeyMap[id];
+                const cleanedStep = { action: originalStep.action };
+                const actionDef = ACTIONS.find(a => a.id === originalStep.action);
+
+                if (actionDef) {
+                    actionDef.params.forEach(paramDef => {
+                        if (originalStep[paramDef.name] !== undefined && originalStep[paramDef.name] !== '' && !(paramDef.type === 'boolean' && originalStep[paramDef.name] === false && paramDef.default === false) ) { // Don't save false bools if default is false
+                            if (paramDef.type === 'next_step_select') {
+                                cleanedStep[paramDef.name] = idToFinalKeyMap[originalStep[paramDef.name]] || originalStep[paramDef.name];
+                            } else if (paramDef.type === 'number'){
+                                cleanedStep[paramDef.name] = parseFloat(originalStep[paramDef.name]);
+                            } else if (paramDef.type === 'boolean'){
+                                cleanedStep[paramDef.name] = Boolean(originalStep[paramDef.name]);
+                            }
+                             else {
+                                cleanedStep[paramDef.name] = originalStep[paramDef.name];
+                            }
+                        }
+                    });
+                }
+                cleanedStep.next = idToFinalKeyMap[originalStep.next] || originalStep.next || 'end';
+                finalFlow.steps[finalKey] = cleanedStep;
+            });
+            return finalFlow;
+        }
+
+        function handleSaveTestFlow() {
+            const jsonOutput = generateFlowJSON();
+            if (!jsonOutput.start && Object.keys(jsonOutput.steps).length > 0) {
+                alert("Warning: Test flow has steps but no designated start point.");
+            }
+            const jsonString = JSON.stringify(jsonOutput, null, 2);
+            const blob = new Blob([jsonString], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            const safeTestName = (testFlow.test_name || "test_flow").replace(/[^a-z0-9_.-]/gi, '_');
+            a.download = `${safeTestName}.json`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        function handleLoadTestFlow(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    try {
+                        const loadedFlow = JSON.parse(e.target.result);
+                        if (loadedFlow && typeof loadedFlow.test_name === 'string' && typeof loadedFlow.steps === 'object') {
+                            const newInternalFlow = { test_name: loadedFlow.test_name, start: null, steps: {} };
+                            const loadedKeyToInternalIdMap = {};
+
+                            Object.keys(loadedFlow.steps).forEach(loadedKey => {
+                                const action = loadedFlow.steps[loadedKey].action;
+                                if (!ACTIONS.find(a => a.id === action)) {
+                                    console.warn(`Loaded step "${loadedKey}" has unknown action type "${action}". Skipping parameter defaults.`);
+                                }
+                                const internalId = generateUniqueStepId(action || 'loaded_step');
+                                loadedKeyToInternalIdMap[loadedKey] = internalId;
+                                
+                                const loadedStepData = loadedFlow.steps[loadedKey];
+                                const actionDef = ACTIONS.find(a => a.id === loadedStepData.action);
+                                newInternalFlow.steps[internalId] = { ...loadedStepData }; // Copy loaded data
+                                
+                                // Apply defaults for missing parameters from definition
+                                if (actionDef) {
+                                    actionDef.params.forEach(paramDef => {
+                                        if (newInternalFlow.steps[internalId][paramDef.name] === undefined && paramDef.default !== undefined) {
+                                            newInternalFlow.steps[internalId][paramDef.name] = paramDef.default;
+                                        }
+                                    });
+                                }
+                                newInternalFlow.steps[internalId].customName = loadedKey;
+                            });
+
+                            newInternalFlow.start = loadedFlow.start ? loadedKeyToInternalIdMap[loadedFlow.start] : null;
+
+                            Object.values(newInternalFlow.steps).forEach(internalStep => {
+                                if (internalStep.next && loadedKeyToInternalIdMap[internalStep.next]) {
+                                    internalStep.next = loadedKeyToInternalIdMap[internalStep.next];
+                                }
+                                const actionDef = ACTIONS.find(a => a.id === internalStep.action);
+                                if (actionDef) {
+                                    actionDef.params.forEach(paramDef => {
+                                        if (paramDef.type === 'next_step_select' && internalStep[paramDef.name] && loadedKeyToInternalIdMap[internalStep[paramDef.name]]) {
+                                            internalStep[paramDef.name] = loadedKeyToInternalIdMap[internalStep[paramDef.name]];
+                                        }
+                                    });
+                                }
+                            });
+                            
+                            testFlow = newInternalFlow;
+                            testFlowNameInput.value = testFlow.test_name;
+                            selectedStepId = null; 
+                            renderCanvas();
+                            renderConfigPanel();
+                        } else {
+                            alert('Invalid test flow JSON file structure.');
+                        }
+                    } catch (error) {
+                        alert('Error parsing JSON file: ' + error.message);
+                        console.error("JSON Load Error:", error);
+                    }
+                };
+                reader.readAsText(file);
+                loadTestFile.value = null;
+            }
+        }
+        
+        async function handleExecuteTest() {
+            const flowJson = generateFlowJSON();
+            if (!flowJson.start && Object.keys(flowJson.steps).length > 0) {
+                 if (!confirm("Warning: No start point. Execute using first step?")) return;
+                 if (Object.keys(flowJson.steps).length > 0) flowJson.start = Object.keys(flowJson.steps)[0];
+            }
+            if (!flowJson.start && Object.keys(flowJson.steps).length === 0) {
+                 alert("Cannot execute an empty test flow."); return;
+            }
+
+            const executionOptions = {
+                headless: headlessCheckbox.checked,
+                browser: browserSelect.value,
+                saveScreenshots: saveScreenshotsCheckbox.checked
+            };
+            const payload = { flow: flowJson, options: executionOptions };
+            
+            executeTestBtn.disabled = true;
+            executeTestBtn.innerHTML = `<svg class="animate-spin h-4 w-4 mr-1.5 inline" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg><span class="hidden sm:inline">Executing...</span>`;
+            resultsContentEl.innerHTML = `<p class="text-slate-400">Executing test, please wait...</p>`;
+            testIdDisplayEl.textContent = '';
+            testResultsModal.classList.remove('hidden');
+
+            try {
+                console.log("Executing test. URL:", `${currentApiBaseUrl}${API_ENDPOINT_EXECUTE_PATH}`, "Payload:", payload);
+                const response = await fetch(`${currentApiBaseUrl}${API_ENDPOINT_EXECUTE_PATH}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload),
+                });
+
+                const responseText = await response.text(); // Get raw response text first
+                let result;
+                try {
+                    result = JSON.parse(responseText); // Try to parse as JSON
+                } catch (e) {
+                    // If JSON parsing fails, result remains the raw text
+                    result = responseText; 
+                    console.error("API response was not valid JSON:", responseText);
+                }
+
+
+                if (!response.ok) {
+                    const errorMsg = (typeof result === 'object' && result.error) ? result.error : (typeof result === 'string' ? result : `HTTP error ${response.status}`);
+                    resultsContentEl.innerHTML = `<p class="text-red-400 font-semibold">Error executing test:</p><pre class="bg-slate-900 p-2 rounded text-xs whitespace-pre-wrap max-h-80 overflow-auto">${JSON.stringify(errorMsg, null, 2)}</pre>`;
+                    console.error('Execution API Error:', response.status, result);
+                    throw new Error(typeof errorMsg === 'string' ? errorMsg : JSON.stringify(errorMsg));
+                }
+                
+                resultsContentEl.innerHTML = `<p class="text-green-400 font-semibold">Test initiated. Waiting for results...</p>
+                                            <pre class="bg-slate-900 p-2 mt-2 rounded text-xs whitespace-pre-wrap max-h-80 overflow-auto">${JSON.stringify(result, null, 2)}</pre>`;
+                if (result.testId) {
+                    testIdDisplayEl.textContent = `Test ID: ${result.testId}`;
+                    pollForResults(result.testId);
+                } else {
+                     resultsContentEl.innerHTML += `<p class="text-yellow-400 mt-2">No Test ID returned. Cannot poll for live results. Response: ${JSON.stringify(result)}</p>`;
+                }
+
+            } catch (error) {
+                console.error('Full Fetch/Execution error object:', error);
+                resultsContentEl.innerHTML = `<p class="text-red-400 font-semibold">Failed to execute test:</p><pre class="bg-slate-900 p-2 rounded text-xs whitespace-pre-wrap max-h-80 overflow-auto">${error.message}\n${error.stack ? error.stack.substring(0, 500) + '...' : ''}\n\nCheck browser console for more details (network tab, CORS errors, etc.). Ensure API is running and reachable at ${currentApiBaseUrl}.</pre>`;
+            } finally {
+                executeTestBtn.disabled = false;
+                 executeTestBtn.innerHTML = `<svg class="h-4 w-4 inline sm:mr-1.5" fill="none" stroke="currentColor"><use xlink:href="#icon-play"></use></svg><span class="hidden sm:inline">Execute</span>`;
+            }
+        }
+
+        let currentPollId = null; 
+        async function pollForResults(testId, attempt = 1) {
+            currentPollId = testId; 
+            const maxAttempts = 45; 
+            const pollInterval = 2000; 
+
+            if (attempt > maxAttempts || currentPollId !== testId) {
+                if(currentPollId === testId) resultsContentEl.innerHTML += `<p class="text-yellow-500 mt-2 text-xs">Max polling attempts reached.</p>`;
+                return;
+            }
+
+            try {
+                await new Promise(resolve => setTimeout(resolve, pollInterval));
+                if (currentPollId !== testId) return; 
+
+                console.log(`Polling for results (attempt ${attempt}) for test ID: ${testId}, URL: ${currentApiBaseUrl}${API_ENDPOINT_RESULTS_PATH}${testId}`);
+                const response = await fetch(`${currentApiBaseUrl}${API_ENDPOINT_RESULTS_PATH}${testId}`);
+                
+                const responseText = await response.text();
+                let resultData;
+                try {
+                    resultData = JSON.parse(responseText);
+                } catch (e) {
+                    resultData = responseText;
+                    console.error("Results API response was not valid JSON:", responseText);
+                }
+
+                if (currentPollId !== testId) return;
+
+                if (!response.ok) {
+                     const errorMsg = (typeof resultData === 'object' && resultData.error) ? resultData.error : (typeof resultData === 'string' ? resultData : `HTTP error ${response.status}`);
+                     resultsContentEl.innerHTML = `<p class="text-red-400 font-semibold">Error fetching results for Test ID ${testId}:</p><pre class="bg-slate-900 p-2 rounded text-xs whitespace-pre-wrap max-h-80 overflow-auto">${JSON.stringify(errorMsg, null, 2)}</pre>`;
+                     console.error('Polling API Error:', response.status, resultData);
+                    return; 
+                }
+                
+                const status = resultData.status ? String(resultData.status).toUpperCase() : 'UNKNOWN';
+                let statusColor = "text-yellow-400";
+                if (status === "COMPLETED" || status === "SUCCESS" || status === "PASSED") statusColor = "text-green-400";
+                if (status === "FAILED" || status === "ERROR") statusColor = "text-red-400";
+
+                resultsContentEl.innerHTML = `
+                    <p class="${statusColor} mb-2 font-semibold">Status: ${status}</p>
+                    <pre class="bg-slate-950 border border-slate-700 p-3 rounded text-xs whitespace-pre-wrap max-h-[calc(90vh-220px)] overflow-y-auto">${JSON.stringify(resultData, null, 2)}</pre>`;
+                
+                if (resultData.report_html_url) resultsContentEl.innerHTML += `<p class="mt-3"><a href="${resultData.report_html_url}" target="_blank" class="text-cyan-400 hover:text-cyan-300 underline text-sm">View HTML Report</a></p>`;
+                if (resultData.video_url) resultsContentEl.innerHTML += `<p class="mt-1"><a href="${resultData.video_url}" target="_blank" class="text-cyan-400 hover:text-cyan-300 underline text-sm">View Video Recording</a></p>`;
+                if (resultData.screenshots && resultData.screenshots.length > 0) {
+                    resultsContentEl.innerHTML += `<p class="mt-3 font-semibold text-slate-300">Screenshots:</p><ul class="list-disc list-inside text-xs">${resultData.screenshots.map(s => `<li><a href="${s.path}" target="_blank" class="text-cyan-400 hover:text-cyan-300 underline">${s.name || 'screenshot'} (${s.step_id || 'N/A'})</a></li>`).join('')}</ul>`;
+                }
+
+                if (['PENDING', 'RUNNING', 'IN_PROGRESS'].includes(status)) {
+                    resultsContentEl.innerHTML += `<p class="text-slate-400 mt-2 text-xs">Polling for results... (attempt ${attempt}/${maxAttempts})</p>`;
+                    pollForResults(testId, attempt + 1);
+                } else {
+                    currentPollId = null; 
+                }
+
+            } catch (error) {
+                console.error('Full Polling error object:', error);
+                 if (currentPollId === testId) resultsContentEl.innerHTML += `<p class="text-red-500 mt-2 text-xs">Error while polling: ${error.message}. Check console.</p>`;
+            }
+        }
+
+        // --- Start the application ---
+        document.addEventListener('DOMContentLoaded', init);
+
+    </script>
+</body>
+</html>

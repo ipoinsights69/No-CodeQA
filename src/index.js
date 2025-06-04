@@ -3,6 +3,15 @@
 require('dotenv').config();
 const fastify = require('fastify')({ logger: true });
 const path = require('path');
+const cors = require('@fastify/cors');
+
+// Register CORS plugin
+fastify.register(cors, {
+  // put your options here
+  origin: "*", // Allow all origins for now, you might want to restrict this in production
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"]
+});
 
 // Register routes
 fastify.register(require('./routes/test-routes'));
