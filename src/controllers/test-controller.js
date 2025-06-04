@@ -2,6 +2,7 @@
 
 const { v4: uuidv4 } = require('uuid');
 const TestExecutor = require('../services/test-executor');
+const { generateHtmlReport } = require('../utils/report-generator'); // To be created
 
 // In-memory storage for test results (would be replaced by MongoDB in production)
 const testResults = new Map();
@@ -114,8 +115,14 @@ async function getTestResult(request, reply) {
       message: `Test result with ID ${id} not found` 
     });
   }
-  
-  return testResults.get(id);
+  const result = testResults.get(id);
+
+  if (request.query.html === 'true') {
+    const htmlReport = generateHtmlReport(result, id); // Pass testId for potential linking or identification
+    reply.type('text/html').send(htmlReport);
+  } else {
+    return result;
+  }
 }
 
 /**

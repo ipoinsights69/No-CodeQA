@@ -4,6 +4,7 @@ require('dotenv').config();
 const fastify = require('fastify')({ logger: true });
 const path = require('path');
 const cors = require('@fastify/cors');
+const fastifyStatic = require('@fastify/static');
 
 // Register CORS plugin
 fastify.register(cors, {
@@ -11,6 +12,18 @@ fastify.register(cors, {
   origin: "*", // Allow all origins for now, you might want to restrict this in production
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization"]
+});
+
+// Serve static files (screenshots, videos)
+fastify.register(fastifyStatic, {
+  root: path.join(__dirname, '../screenshots'),
+  prefix: '/screenshots/', // optional: default '/' 
+});
+
+fastify.register(fastifyStatic, {
+  root: path.join(__dirname, '../videos'), // Assuming videos are stored here
+  prefix: '/videos/',
+  decorateReply: false // Important if you register multiple static routes or have routes with similar prefixes
 });
 
 // Register routes
