@@ -1,0 +1,123 @@
+{
+  "test_name": "CNBCTV18 Website QA Test",
+  "description": "Comprehensive QA test for cnbctv18.com using XPath verification, network monitoring, and URL checks",
+  "steps": [
+    {
+      "id": "step1",
+      "type": "navigate",
+      "url": "https://www.cnbctv18.com",
+      "description": "Navigate to CNBCTV18 homepage"
+    },
+    {
+      "id": "step2",
+      "type": "captureNetworkLogs",
+      "urlPattern": "cnbctv18.com",
+      "includeRequestData": true,
+      "includeResponseData": true,
+      "saveAs": "cnbcNetworkLogs",
+      "description": "Capture network logs for cnbctv18.com domain"
+    },
+    {
+      "id": "step3",
+      "type": "takeScreenshot",
+      "name": "homepage-screenshot",
+      "fullPage": false,
+      "description": "Take a screenshot of the homepage"
+    },
+    {
+      "id": "step4",
+      "type": "checkXPath",
+      "xpath": "//header",
+      "checkVisibility": true,
+      "saveAs": "headerElement",
+      "description": "Verify if header element exists and is visible"
+    },
+    {
+      "id": "step5",
+      "type": "checkXPath",
+      "xpath": "//a[contains(@href, 'markets')]",
+      "checkVisibility": true,
+      "saveAs": "marketsLink",
+      "description": "Verify if Markets link exists and is visible"
+    },
+    {
+      "id": "step6",
+      "type": "getElementCount",
+      "selector": "//article",
+      "xPath": true,
+      "saveAs": "articleCount",
+      "description": "Count article elements using XPath"
+    },
+    {
+      "id": "step7",
+      "type": "log",
+      "message": "Found ${articleCount} articles on the homepage",
+      "description": "Log the number of articles found"
+    },
+    {
+      "id": "step8",
+      "type": "verifyRedirectedUrl",
+      "selector": "//a[contains(@href, 'markets')][1]",
+      "xPath": true,
+      "expectedUrl": "cnbctv18.com/market",
+      "saveAs": "marketsRedirectResult",
+      "description": "Click Markets link and verify redirection URL"
+    },
+    {
+      "id": "step9",
+      "type": "takeScreenshot",
+      "name": "markets-page-screenshot",
+      "fullPage": false,
+      "description": "Take a screenshot of the Markets page"
+    },
+    {
+      "id": "step10",
+      "type": "checkXPath",
+      "xpath": "//h1[contains(text(), 'Market')]",
+      "checkVisibility": true,
+      "saveAs": "marketsHeading",
+      "description": "Verify if Markets heading exists and is visible"
+    },
+    {
+      "id": "step11",
+      "type": "validateNetworkCall",
+      "url": "cnbctv18.com/market",
+      "expectedStatus": 200,
+      "saveResponseAs": "marketsResponse",
+      "description": "Validate network call to Markets page"
+    },
+    {
+      "id": "step12",
+      "type": "navigate",
+      "url": "https://www.cnbctv18.com/business/",
+      "description": "Navigate to Business section"
+    },
+    {
+      "id": "step13",
+      "type": "takeScreenshot",
+      "name": "business-page-screenshot",
+      "fullPage": false,
+      "description": "Take a screenshot of the Business page"
+    },
+    {
+      "id": "step14",
+      "type": "getElementCount",
+      "selector": "//article",
+      "xPath": true,
+      "saveAs": "businessArticleCount",
+      "description": "Count article elements on Business page using XPath"
+    },
+    {
+      "id": "step15",
+      "type": "log",
+      "message": "Found ${businessArticleCount} articles on the Business page",
+      "description": "Log the number of articles found on Business page"
+    },
+    {
+      "id": "step16",
+      "type": "log",
+      "message": "Test completed successfully with network logs and XPath verification for CNBCTV18",
+      "description": "Log completion message"
+    }
+  ]
+}

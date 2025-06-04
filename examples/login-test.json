@@ -1,0 +1,33 @@
+{
+  "test_name": "User Login Test",
+  "start": "openPage",
+  "steps": {
+    "openPage": {
+      "action": "open_url",
+      "url": "https://example.com/login",
+      "next": "fillForm"
+    },
+    "fillForm": {
+      "action": "type",
+      "selector": "#username",
+      "text": "testuser",
+      "next": "typePassword"
+    },
+    "typePassword": {
+      "action": "type",
+      "selector": "#password",
+      "text": "123456",
+      "next": "clickLogin"
+    },
+    "clickLogin": {
+      "action": "click",
+      "selector": "#loginBtn",
+      "next": "assertLogin"
+    },
+    "assertLogin": {
+      "action": "assert_url",
+      "expected": "https://example.com/dashboard",
+      "next": "end"
+    }
+  }
+}

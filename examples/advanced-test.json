@@ -1,0 +1,100 @@
+{
+  "test_name": "Advanced Test with Variables and Conditionals",
+  "start": "openPage",
+  "steps": {
+    "openPage": {
+      "action": "open_url",
+      "url": "https://example.com/products",
+      "next": "savePageTitle"
+    },
+    "savePageTitle": {
+      "action": "set_variable",
+      "name": "page_title",
+      "value": "Products Page",
+      "next": "countProducts"
+    },
+    "countProducts": {
+      "action": "get_element_count",
+      "selector": ".product-item",
+      "saveAs": "product_count",
+      "next": "checkProductCount"
+    },
+    "checkProductCount": {
+      "action": "if_equals",
+      "value1": "{{product_count}}",
+      "value2": 0,
+      "then": "noProductsFound",
+      "else": "hasProducts"
+    },
+    "noProductsFound": {
+      "action": "print_log",
+      "message": "No products found on the page",
+      "level": "warning",
+      "next": "end"
+    },
+    "hasProducts": {
+      "action": "print_log",
+      "message": "Found {{product_count}} products",
+      "next": "getFirstProductName"
+    },
+    "getFirstProductName": {
+      "action": "get_text",
+      "selector": ".product-item:first-child .product-name",
+      "saveAs": "first_product_name",
+      "next": "clickFirstProduct"
+    },
+    "clickFirstProduct": {
+      "action": "click",
+      "selector": ".product-item:first-child",
+      "next": "waitForProductPage"
+    },
+    "waitForProductPage": {
+      "action": "wait_for_selector",
+      "selector": ".product-details",
+      "timeout": 5000,
+      "next": "validateProductName"
+    },
+    "validateProductName": {
+      "action": "assert_text",
+      "selector": ".product-title",
+      "expected": "{{first_product_name}}",
+      "next": "checkAddToCartButton"
+    },
+    "checkAddToCartButton": {
+      "action": "if_element_exists",
+      "selector": "#add-to-cart",
+      "then": "addToCart",
+      "else": "productUnavailable"
+    },
+    "productUnavailable": {
+      "action": "print_log",
+      "message": "Product is unavailable for purchase",
+      "level": "warning",
+      "next": "end"
+    },
+    "addToCart": {
+      "action": "click",
+      "selector": "#add-to-cart",
+      "next": "waitForCartUpdate"
+    },
+    "waitForCartUpdate": {
+      "action": "wait_until_text",
+      "selector": ".cart-count",
+      "text": "1",
+      "timeout": 5000,
+      "next": "validateNetworkRequest"
+    },
+    "validateNetworkRequest": {
+      "action": "validate_network_call",
+      "url": "/api/cart",
+      "method": "POST",
+      "saveResponse": "cart_response",
+      "next": "takeScreenshot"
+    },
+    "takeScreenshot": {
+      "action": "screenshot",
+      "path": "product_added_to_cart.png",
+      "next": "end"
+    }
+  }
+}

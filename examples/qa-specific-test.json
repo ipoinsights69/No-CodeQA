@@ -1,0 +1,109 @@
+{
+  "test_name": "QA-Specific Features Test",
+  "description": "Demonstrates QA-specific features like XPath verification, network logs, and URL redirection checks",
+  "steps": [
+    {
+      "id": "step1",
+      "type": "navigate",
+      "url": "https://example.com",
+      "description": "Navigate to example.com"
+    },
+    {
+      "id": "step2",
+      "type": "captureNetworkLogs",
+      "urlPattern": "example.com",
+      "includeRequestData": true,
+      "includeResponseData": true,
+      "saveAs": "networkLogs",
+      "description": "Capture network logs for example.com domain"
+    },
+    {
+      "id": "step3",
+      "type": "checkXPath",
+      "xpath": "//h1",
+      "checkVisibility": true,
+      "saveAs": "h1Element",
+      "description": "Verify if H1 element exists and is visible"
+    },
+    {
+      "id": "step4",
+      "type": "getText",
+      "selector": "//h1",
+      "xPath": true,
+      "saveAs": "h1Text",
+      "description": "Get text from H1 element using XPath"
+    },
+    {
+      "id": "step5",
+      "type": "assertText",
+      "selector": "//h1",
+      "xPath": true,
+      "text": "Example Domain",
+      "description": "Assert H1 text using XPath"
+    },
+    {
+      "id": "step6",
+      "type": "getElementCount",
+      "selector": "//p",
+      "xPath": true,
+      "saveAs": "paragraphCount",
+      "description": "Count paragraph elements using XPath"
+    },
+    {
+      "id": "step7",
+      "type": "click",
+      "selector": "//a[contains(@href, 'iana.org')]",
+      "xPath": true,
+      "description": "Click on IANA link using XPath"
+    },
+    {
+      "id": "step8",
+      "type": "waitForNavigation",
+      "timeout": 5000,
+      "description": "Wait for navigation to complete"
+    },
+    {
+      "id": "step9",
+      "type": "assertUrl",
+      "url": "iana.org",
+      "description": "Verify we navigated to iana.org"
+    },
+    {
+      "id": "step10",
+      "type": "navigate",
+      "url": "https://example.com",
+      "description": "Navigate back to example.com"
+    },
+    {
+      "id": "step11",
+      "type": "verifyRedirectedUrl",
+      "selector": "//a",
+      "xPath": true,
+      "expectedUrl": "iana.org",
+      "saveAs": "redirectResult",
+      "description": "Click link and verify redirection URL"
+    },
+    {
+      "id": "step12",
+      "type": "validateNetworkCall",
+      "url": "iana.org",
+      "expectedStatus": 200,
+      "expectedContent": "IANA",
+      "saveResponseAs": "ianaResponse",
+      "description": "Validate network call to iana.org"
+    },
+    {
+      "id": "step13",
+      "type": "takeScreenshot",
+      "name": "final-screenshot",
+      "fullPage": true,
+      "description": "Take a full page screenshot"
+    },
+    {
+      "id": "step14",
+      "type": "log",
+      "message": "Test completed successfully with network logs and XPath verification",
+      "description": "Log completion message"
+    }
+  ]
+}
